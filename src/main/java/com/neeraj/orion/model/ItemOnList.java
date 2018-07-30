@@ -19,6 +19,9 @@ public class ItemOnList {
 		this.isComplete = false;
 	}
 
+	public ItemOnList() {
+	}
+
 	public Long getId() {
 		return id;
 	}

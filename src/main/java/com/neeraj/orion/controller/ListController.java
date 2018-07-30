@@ -21,6 +21,7 @@ public class ListController {
 	@RequestMapping("/")
 	public String index(Model model) {
 		List<ItemOnList> lists = listServ.getItemsList();
+		model.addAttribute("newitem", new ItemOnList());
 		model.addAttribute("items", new ListViewModel(lists));
 		return "index";
 	}
