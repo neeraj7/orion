@@ -8,6 +8,7 @@ import com.neeraj.todo.model.ListViewModel;
 import com.neeraj.todo.repository.ListRepository;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ListService {
@@ -31,5 +32,9 @@ public class ListService {
             item.setId(requestItem.getId());
             listRepo.save(item);
 		}
+	}
+
+	public Mono<ItemOnList> getItemById(String id) {
+		return listRepo.findById(id);
 	}
 }

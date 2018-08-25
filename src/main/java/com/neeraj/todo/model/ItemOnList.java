@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class ItemOnList {
 	
 	@Id
-	private Long id;
+	private String id;
 	private String name;
 	private boolean isComplete;
 	
@@ -19,11 +19,11 @@ public class ItemOnList {
 	public ItemOnList() {
 	}
 
-	public Long getId() {
+	public String getId() {
 		return id;
 	}
 	
-	public void setId(Long id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
