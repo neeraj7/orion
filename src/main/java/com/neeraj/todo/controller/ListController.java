@@ -1,29 +1,33 @@
 package com.neeraj.todo.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.neeraj.todo.model.ItemOnList;
 import com.neeraj.todo.model.ListViewModel;
 import com.neeraj.todo.service.ListService;
 
-@Controller
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+@RestController
 public class ListController {
 	
 	@Autowired
 	private ListService listServ;
 	
 	@RequestMapping("/")
-	public String index(Model model) {
-//		List<ItemOnList> lists = listServ.getItemsList();
-		model.addAttribute("newitem", new ItemOnList());
-//		model.addAttribute("items", new ListViewModel(lists));
-		return "index";
+	public Flux<ItemOnList> index() {
+		return listServ.getItemsList();
+	}
+	
+	@GetMapping("/{id}")
+	public Mono<ItemOnList> getItemById(@PathVariable String id) {
+		return listServ.getItemById(id);
 	}
 	
 	@RequestMapping("/add")
