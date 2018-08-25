@@ -14,17 +14,37 @@ import com.neeraj.todo.service.ListService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * A rest controller to expose endpoint for items on the list. 
+ * 
+ * @author neeraj.kumar
+ *
+ */
 @RestController
 public class ListController {
 	
+	/**
+	 * Injecting ListService instance.
+	 */
 	@Autowired
 	private ListService listServ;
 	
+	/**
+	 * Get the list of all the items.
+	 * 
+	 * @return Flux<ItemOnList>
+	 */
 	@RequestMapping("/")
-	public Flux<ItemOnList> index() {
+	public Flux<ItemOnList> getAll() {
 		return listServ.getItemsList();
 	}
 	
+	/**
+	 * Get the item of related to passed 'id'
+	 * 
+	 * @param id
+	 * @return Mono<ItemOnList>
+	 */
 	@GetMapping("/{id}")
 	public Mono<ItemOnList> getItemById(@PathVariable String id) {
 		return listServ.getItemById(id);
@@ -36,11 +56,16 @@ public class ListController {
 		return "redirect:/";
 	}
 	
+	/**
+	 * Add the new item in the database.
+	 * 
+	 * @param requestLists
+	 * @return String
+	 */
 	@RequestMapping("/update")
 	public String updateItems(@ModelAttribute ListViewModel requestLists) {
 		listServ.updateItem(requestLists);
 		return "redirect:/";
-	}
-	
+	}	
 
 }

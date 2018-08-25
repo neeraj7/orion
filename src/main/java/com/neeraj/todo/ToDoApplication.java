@@ -10,9 +10,21 @@ import org.springframework.context.annotation.Bean;
 import com.neeraj.todo.model.ItemOnList;
 import com.neeraj.todo.repository.ListRepository;
 
+/**
+ * A simple to-do application.
+ * 
+ * @author neeraj.kumar
+ *
+ */
 @SpringBootApplication
 public class ToDoApplication {
 
+	/**
+	 * Initializing dummy data in database.
+	 * 
+	 * @param listRepo
+	 * @return CommandLineRunner
+	 */
 	@Bean
 	CommandLineRunner initData(ListRepository listRepo) {
 		Stream<ItemOnList> data = Stream.of(new ItemOnList("item 1"),
