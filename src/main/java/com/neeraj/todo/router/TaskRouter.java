@@ -2,7 +2,10 @@ package com.neeraj.todo.router;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
+import static org.springframework.web.reactive.function.server.RequestPredicates.PUT;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +16,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import com.neeraj.todo.handlers.TaskHandler;
 
 /**
+ * Mapping the REST endpoints with the appropriate handlers.
  * 
  * @author neeraj.kumar
  *
@@ -24,7 +28,9 @@ public class TaskRouter {
 	@Bean
 	public RouterFunction<ServerResponse> route(TaskHandler taskHandler) {
 		return RouterFunctions.route(GET("/item/{id}").and(accept(APPLICATION_JSON)), taskHandler::get)
-	            .andRoute(GET("/items").and(accept(APPLICATION_JSON)), taskHandler::all);	            
+	            .andRoute(GET("/items").and(accept(APPLICATION_JSON)), taskHandler::all)
+	            .andRoute(POST("/item/new").and(accept(APPLICATION_JSON)).and(contentType(APPLICATION_JSON)), taskHandler::addNewItem)
+	            .andRoute(PUT("/item/update").and(accept(APPLICATION_JSON)).and(contentType(APPLICATION_JSON)), taskHandler::updateItem);	            
 	}
 	
 }
