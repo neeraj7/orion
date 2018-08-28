@@ -11,7 +11,7 @@ It uses _spring webflux_ framework with _reactive mongodb_.
 
 ### Instructions to use the application
 
-- You can use any web api testing tool to send the request to the running application on your system. I am using [Postman](https://www.getpostman.com).
+- Any Web API testing tool can be used to send the request to the application running on the localhost. I am using [Postman](https://www.getpostman.com).
 
 Note :- Please make sure you are passing 'Content-Type' header with the value 'application/json' in every request.
 
