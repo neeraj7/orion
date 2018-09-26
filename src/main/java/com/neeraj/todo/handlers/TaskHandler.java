@@ -4,12 +4,15 @@ import static org.springframework.web.reactive.function.BodyInserters.fromPublis
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyExtractors;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import com.neeraj.todo.model.ItemOnList;
 import com.neeraj.todo.repository.ListRepository;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import reactor.core.publisher.Mono;
 
 /**
@@ -88,6 +91,21 @@ public class TaskHandler {
 		return ServerResponse.ok()
 							 .contentType(MediaType.APPLICATION_JSON)
 							 .body(fromPublisher(item.flatMap(listRepo::save), ItemOnList.class));
+	}
+	
+	/**
+	 * Delete an existing to-do item from the database.
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public Mono<ServerResponse> deleteItem(ServerRequest request) {
 		
+//		final Mono<ItemOnList> item = request.bodyToMono(ItemOnList.class);
+		final Mono<ItemOnList> item = request.body(BodyExtractors.toMono(ItemOnList.class));
+		item.flatMap(listRepo::delete).doOnSuccess(i -> System.out.println("Successfull ")).doOnError(i -> System.out.println("Error "));
+		return ServerResponse.ok()	
+							 .contentType(MediaType.TEXT_PLAIN)
+							 .syncBody("Deleted");
 	}
 }
