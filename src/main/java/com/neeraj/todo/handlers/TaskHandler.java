@@ -2,17 +2,17 @@ package com.neeraj.todo.handlers;
 
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyExtractors;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import com.neeraj.todo.model.ItemOnList;
 import com.neeraj.todo.repository.ListRepository;
+import com.neeraj.todo.validator.ToDoValidator;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import reactor.core.publisher.Mono;
 
 /**
@@ -28,6 +28,12 @@ public class TaskHandler {
 	 * ListRepository instance for database operations.
 	 */
 	private final ListRepository listRepo;
+	
+	/**
+	 * To-do vaidator
+	 */
+	@Autowired
+	private ToDoValidator toDoValidator;
 	
 	/**
 	 * Constructor.
@@ -74,10 +80,28 @@ public class TaskHandler {
 	 * @return added to-do item in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> addNewItem(ServerRequest request) {
-		final Mono<ItemOnList> item = request.bodyToMono(ItemOnList.class);
+		
+//		try {
+			return toDoValidator.validateBody(ItemOnList.class, request)
+						.flatMap(body -> ServerResponse.ok()
+													   .contentType(MediaType.APPLICATION_JSON)
+													   .body(Mono.just(body), ItemOnList.class))
+						.onErrorResume(e -> Mono.just("Error kdjslkfj" + e.getMessage())
+						            .flatMap(s -> ServerResponse.badRequest()
+						            .contentType(MediaType.APPLICATION_JSON)
+						            .body(Mono.just(e), Throwable.class)));
+//		} catch (CustomException e) {
+//			System.out.println("Error = " + e.getMessage());
+//			return Mono.just("Error catch" + e.getExceptions())
+//		          .flatMap(s -> ServerResponse.ok()
+//		            .contentType(MediaType.APPLICATION_JSON)
+//		            .body(BodyInserters.fromPublisher(Mono.just(s), String.class)));
+//		}
+		
+		/*final Mono<ItemOnList> item = request.bodyToMono(ItemOnList.class);
 		return ServerResponse.ok()
 				             .contentType(MediaType.APPLICATION_JSON)
-				             .body(fromPublisher(item.map(p -> new ItemOnList(p.getName())).flatMap(listRepo::save), ItemOnList.class));
+				             .body(fromPublisher(item.map(p -> new ItemOnList(p.getName())).flatMap(listRepo::save), ItemOnList.class));*/
 	}
 	
 	/**

@@ -1,5 +1,7 @@
 package com.neeraj.todo.model;
 
+import javax.validation.constraints.NotEmpty;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -16,6 +18,7 @@ public class ItemOnList {
 	 * Auto-generated id.
 	 */
 	@Id
+	@NotEmpty
 	private String id;
 	
 	/**
