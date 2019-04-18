@@ -15,7 +15,7 @@ It uses _spring webflux_ framework with _reactive mongodb_.
 
 Note :- Please make sure you are passing 'Content-Type' header with the value 'application/json' in every request.
 
-- Now, let's hit the [GET(/items)](http://localhost:8080/items) endpoint
+- Now, let's hit the [GET(/v1/tasks)](http://localhost:8080/v1/tasks) endpoint
     
     Response: 
     ```
@@ -42,7 +42,7 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     }
     ]
     ```
-- [GET(/item/5b8581c6f88af61440027373)](http://localhost:8080/item/5b8581c6f88af61440027373) to access the to-do item by its 'id'
+- [GET(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5b8581c6f88af61440027373) to access the to-do task by its 'task_id'
     
     Response:
     ```
@@ -52,7 +52,7 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     "complete": false
     }
     ```
-- [POST(/item/new)](http://localhost:8080/item/new) to add a new to-do item 
+- [POST(/v1/tasks)](http://localhost:8080/v1/tasks) to create a new task in database 
    
     Request Body :
     ```
@@ -68,7 +68,7 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     "complete": false
     }
     ```
-- [PUT(/item/update)](http://localhost:8080/item/update) to update an existing to-do item
+- [PUT(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5b8581c6f88af61440027373) to update an existing to-do task
     
     Request Body :
     ```
@@ -87,4 +87,16 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     }
     ```
     
+  [DELETE(/v1/tasks)](http://localhost:8080/v1/tasks) to delete all tasks in the database
     
+    Response :
+    ```
+    Not yet decided.
+    ```  
+
+  [DELETE(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5b8581c6f88af61440027373) to delete an existing to-do task
+    
+    Response :
+    ```
+    Not yet decided.
+    ```  
