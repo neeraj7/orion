@@ -26,30 +26,30 @@ public class ListService {
 	private ListRepository listRepo;
 	
 	/**
-	 * Get the all the items in the mongodb.
+	 * Get the all the tasks in the mongodb.
 	 * 
 	 * @return Flux<ItemOnList>
 	 */
-	public Flux<ItemOnList> getItemsList() {
+	public Flux<ItemOnList> getTasks() {
 		return listRepo.findAll();
 	}
 	
 	/**
-	 * Add to-do item in the database.
+	 * Create a to-do task in the database.
 	 * 
 	 * @param requestItem
 	 */
-	public void addItem(ItemOnList requestItem) {
+	public void createTask(ItemOnList requestItem) {
 		ItemOnList item = new ItemOnList(requestItem.getName());
 		listRepo.save(item);
 	}
 	
 	/**
-	 * Update to-do item in the database.
+	 * Update to-do task in the database.
 	 * 
 	 * @param requestLists
 	 */
-	public void updateItem(ListViewModel requestLists) {
+	public void updateTask(ListViewModel requestLists) {
 		for(ItemOnList requestItem : requestLists.getItemLists()) {
 			ItemOnList item = new ItemOnList(requestItem.getName());
             item.setComplete(requestItem.isComplete());
@@ -59,12 +59,12 @@ public class ListService {
 	}
 
 	/**
-	 * Get the to-do item by the id.
+	 * Get the to-do task by the id.
 	 * 
 	 * @param id
 	 * @return Mono<ItemOnList>
 	 */
-	public Mono<ItemOnList> getItemById(String id) {
+	public Mono<ItemOnList> getTaskById(String id) {
 		return listRepo.findById(id);
 	}
 }

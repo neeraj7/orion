@@ -7,13 +7,18 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
 import static org.springframework.web.reactive.function.server.RequestPredicates.contentType;
+import static org.springframework.web.reactive.function.server.RequestPredicates.path;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+//import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.RouterFunctions;
+//import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import com.neeraj.todo.constant.ApplicationConstants;
 import com.neeraj.todo.handlers.TaskHandler;
 
 /**
@@ -27,12 +32,19 @@ public class TaskRouter {
 
 	
 	@Bean
-	public RouterFunction<ServerResponse> route(TaskHandler taskHandler) {
-		return RouterFunctions.route(GET("/item/{id}").and(accept(APPLICATION_JSON)), taskHandler::get)
-	            .andRoute(GET("/items").and(accept(APPLICATION_JSON)), taskHandler::all)
-	            .andRoute(POST("/item/new").and(accept(APPLICATION_JSON)).and(contentType(APPLICATION_JSON)), taskHandler::addNewItem)
-	            .andRoute(PUT("/item/update").and(accept(APPLICATION_JSON)).and(contentType(APPLICATION_JSON)), taskHandler::updateItem)
-	            .andRoute(DELETE("/item/delete").and(contentType(APPLICATION_JSON)), taskHandler::deleteItem);	            
+	public RouterFunction<ServerResponse> defaultRoutes(TaskHandler taskHandler) {
+		// Adding the prefix to the endpoints
+		return nest(path(ApplicationConstants.TASKS_V1),  
+				// Every endpoints response will be in json format
+				nest(accept(APPLICATION_JSON), 			 
+						route(GET(""), taskHandler::getTasks)
+						.andRoute(GET("/{task_id}"), taskHandler::getTaskById)
+						// Content type in the PUT and POST request must be in json format
+						.andNest(contentType(APPLICATION_JSON),  
+								route(POST("").and(contentType(APPLICATION_JSON)), taskHandler::createTask)
+					            .andRoute(PUT("/{task_id}").and(contentType(APPLICATION_JSON)), taskHandler::updateTask))
+						.andRoute(DELETE(""), taskHandler::deleteTasks)
+			            .andRoute(DELETE("/{task_id}"), taskHandler::deleteTaskById)));
 	}
 	
 }
