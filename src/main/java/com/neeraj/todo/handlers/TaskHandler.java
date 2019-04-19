@@ -37,15 +37,6 @@ public class TaskHandler {
 	@Autowired
 	private ToDoValidator toDoValidator;
 
-//	/**
-//	 * Constructor.
-//	 * 
-//	 * @param listRepo
-//	 */
-//	public TaskHandler(ListRepository listRepo) {
-//		this.listRepo = listRepo;
-//	}
-
 	/**
 	 * Method search for the to-do task in the database. A to-do 'task_id' is
 	 * passed as path argument in the request.
