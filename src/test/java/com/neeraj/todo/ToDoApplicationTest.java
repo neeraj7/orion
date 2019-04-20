@@ -1,4 +1,4 @@
-package com.neeraj.orion.todo;
+package com.neeraj.todo;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -13,7 +13,7 @@ import com.neeraj.todo.model.ItemOnList;
 
 @RunWith(SpringRunner.class)
 @WebFluxTest
-public class ToDoApplicationTests {
+public class ToDoApplicationTest {
 
 	@Autowired
 	private WebTestClient client;
