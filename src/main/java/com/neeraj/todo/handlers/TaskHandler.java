@@ -1,18 +1,24 @@
 package com.neeraj.todo.handlers;
 
+import static com.neeraj.todo.constant.ApplicationConstants.SUCCESSFULLY_DELETED;
+import static com.neeraj.todo.constant.ApplicationConstants.TASK_ID;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import com.neeraj.todo.exceptions.ToDoException;
-import com.neeraj.todo.model.ItemOnList;
+import com.neeraj.todo.model.SuccessResponse;
+import com.neeraj.todo.model.Task;
 import com.neeraj.todo.model.ToDoError;
-import com.neeraj.todo.repository.ListRepository;
-import com.neeraj.todo.validator.ToDoValidator;
+import com.neeraj.todo.service.TaskService;
+import com.neeraj.todo.validator.TaskValidator;
 
 import reactor.core.publisher.Mono;
 
@@ -26,25 +32,16 @@ import reactor.core.publisher.Mono;
 public class TaskHandler {
 
 	/**
-	 * ListRepository instance for database operations.
+	 * TaskService instance.
 	 */
 	@Autowired
-	private ListRepository listRepo;
+	private TaskService taskService;
 
 	/**
 	 * To-do vaidator
 	 */
 	@Autowired
-	private ToDoValidator toDoValidator;
-
-//	/**
-//	 * Constructor.
-//	 * 
-//	 * @param listRepo
-//	 */
-//	public TaskHandler(ListRepository listRepo) {
-//		this.listRepo = listRepo;
-//	}
+	private TaskValidator taskValidator;
 
 	/**
 	 * Method search for the to-do task in the database. A to-do 'task_id' is
@@ -55,13 +52,17 @@ public class TaskHandler {
 	 *         found in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> getTaskById(ServerRequest request) {
-		final Mono<ItemOnList> item = listRepo
-				.findById(request.pathVariable("task_id"));
-		return item
-				.flatMap(p -> ServerResponse.ok()
-						.contentType(MediaType.APPLICATION_JSON)
-						.body(fromPublisher(item, ItemOnList.class)))
-				.switchIfEmpty(ServerResponse.notFound().build());
+		return taskService.getTaskById(request.pathVariable(TASK_ID))
+				.flatMap(task -> ServerResponse.ok()
+						.contentType(APPLICATION_JSON)
+						.body(BodyInserters.fromObject(task)))
+				.switchIfEmpty(emptyResponse()).onErrorResume(err -> {
+					ToDoError error = new ToDoError("Not Found",
+							"No task is found.");
+					return ServerResponse.status(HttpStatus.NOT_FOUND)
+							.contentType(APPLICATION_JSON)
+							.body(BodyInserters.fromObject(error));
+				});
 	}
 
 	/**
@@ -71,8 +72,16 @@ public class TaskHandler {
 	 * @return Flux<ItemOnList> in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> getTasks(ServerRequest request) {
-		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-				.body(fromPublisher(listRepo.findAll(), ItemOnList.class));
+		return taskService.getTasks().collectList()
+				.flatMap(task -> ServerResponse.ok()
+						.contentType(APPLICATION_JSON)
+						.body(BodyInserters.fromObject(task)))
+				.switchIfEmpty(emptyResponse()).onErrorResume(e -> {
+					ToDoException er = (ToDoException) e;
+					return ServerResponse.badRequest().body(
+							Mono.just(er.getExceptions().get(0)),
+							ToDoError.class);
+				});
 	}
 
 	/**
@@ -82,11 +91,14 @@ public class TaskHandler {
 	 * @return added to-do task in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> createTask(ServerRequest request) {
-		return toDoValidator.validateBody(ItemOnList.class, request) // Validate the request body
+		// Validate the request body
+		return taskValidator.validateBody(Task.class, request)
 				.flatMap(body -> ServerResponse.ok()
 						.contentType(MediaType.APPLICATION_JSON)
-						.body(fromPublisher(listRepo.save(body), // save the item into the db and return as the saved item in response
-								ItemOnList.class)) 
+						// save the task into the db
+						// and return as the saved task in response
+						.body(fromPublisher(taskService.createTask(body),
+								Task.class))
 						.onErrorResume(e -> {
 							ToDoException er = (ToDoException) e;
 							return ServerResponse.badRequest().body(
@@ -102,9 +114,26 @@ public class TaskHandler {
 	 * @return updated to-do task in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> updateTask(ServerRequest request) {
-		final Mono<ItemOnList> item = request.bodyToMono(ItemOnList.class);
-		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).body(
-				fromPublisher(item.flatMap(listRepo::save), ItemOnList.class));
+		// Validate the request body
+		return taskValidator.validateBody(Task.class, request).flatMap(task -> {
+			// Call to updateTask method
+			return taskService.updateTask(request.pathVariable(TASK_ID), task)
+					// on success
+					.flatMap(t -> ServerResponse.status(HttpStatus.CREATED)
+							.contentType(APPLICATION_JSON)
+							.body(BodyInserters.fromObject(t)))
+					// on failure
+					.onErrorResume(error -> {
+						return ServerResponse.status(HttpStatus.BAD_REQUEST)
+								.contentType(APPLICATION_JSON).syncBody(
+										"Error happened during updating the task.");
+					});
+			// When validation fails
+		}).onErrorResume(e -> {
+			ToDoException er = (ToDoException) e;
+			return ServerResponse.badRequest().body(
+					Mono.just(er.getExceptions().get(0)), ToDoError.class);
+		});
 	}
 
 	/**
@@ -114,30 +143,14 @@ public class TaskHandler {
 	 * @return
 	 */
 	public Mono<ServerResponse> deleteTasks(ServerRequest request) {
-		// TODO: Write code to delete a single task
-		  return toDoValidator.validateBody(ItemOnList.class, request)
-		 			  .flatMap(item -> {
-		 				 listRepo.findById(item.getId())
-		 				 		 .flatMap(i -> listRepo.delete(i));
-		 				 listRepo.deleteAll();
-		 				return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
-						.syncBody("Deleted");
-		 			  })
-		 			  .onErrorResume(error -> {
-		 				  System.out.println("Error in deletion - " + error.getMessage());
-		 				  return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN).syncBody("Can't delete. Error Happened");
-		 			  });
-		 			  
-//		 final Mono<ItemOnList> item = request.bodyToMono(ItemOnList.class);
-//		final Mono<ItemOnList> item = request
-//				.body(BodyExtractors.toMono(ItemOnList.class));
-//		item.flatMap(i -> listRepo.deleteById(i.getId()))
-//				.doOnSuccess(i -> System.out.println("Successfull "))
-//				.doOnError(i -> System.out.println("Error "));
-//		return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
-//				.syncBody("Deleted");
+		return taskService.deleteTasks()
+				.then(successResponse(SUCCESSFULLY_DELETED))
+				.onErrorResume(error -> {
+					return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
+							.syncBody("Can't delete. Error Happened");
+				});
 	}
-	
+
 	/**
 	 * Delete an existing to-do task from the database.
 	 * 
@@ -145,7 +158,23 @@ public class TaskHandler {
 	 * @return
 	 */
 	public Mono<ServerResponse> deleteTaskById(ServerRequest request) {
-		// TODO: Write code to delete a single task
-		return null;
+		return taskService.deleteTaskById(request.pathVariable(TASK_ID))
+				.then(successResponse(SUCCESSFULLY_DELETED))
+				.onErrorResume(error -> {
+					return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
+							.syncBody("Can't delete. Error Happened");
+				});
+	}
+
+	private Mono<ServerResponse> emptyResponse() {
+		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+				.syncBody(new SuccessResponse(HttpStatus.OK.toString(),
+						"Empty response"));
+	}
+
+	private Mono<ServerResponse> successResponse(String desc) {
+		return ServerResponse.ok().contentType(APPLICATION_JSON)
+				.body(BodyInserters.fromObject(
+						new SuccessResponse(HttpStatus.OK.toString(), desc)));
 	}
 }
