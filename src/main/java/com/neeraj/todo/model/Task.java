@@ -2,6 +2,8 @@ package com.neeraj.todo.model;
 
 import java.util.Date;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.neeraj.todo.constant.TaskPriority;
@@ -10,9 +12,12 @@ import com.neeraj.todo.constant.TaskStatus;
 @Document
 public class Task {
 	
+	@Id
+	private String id;
 	private String title;
 	private String desc;
-	private Date date;
+	@CreatedDate
+	private Date created;
 	private TaskStatus status;
 	private TaskPriority priority;
 	private String category;
@@ -21,12 +26,16 @@ public class Task {
 		super();
 	}
 	
-	public Task(String title, String desc, Date date, TaskStatus status,
+	public String getId() {
+		return id;
+	}
+	
+	public Task(String title, String desc, Date created, TaskStatus status,
 			TaskPriority priority, String category) {
 		super();
 		this.title = title;
 		this.desc = desc;
-		this.date = date;
+		this.created = created;
 		this.status = status;
 		this.priority = priority;
 		this.category = category;
@@ -44,11 +53,11 @@ public class Task {
 	public void setDesc(String desc) {
 		this.desc = desc;
 	}
-	public Date getDate() {
-		return date;
+	public Date getCreatedDate() {
+		return created;
 	}
-	public void setDate(Date date) {
-		this.date = date;
+	public void setCreatedDate(Date date) {
+		this.created = date;
 	}
 	public TaskStatus getStatus() {
 		return status;

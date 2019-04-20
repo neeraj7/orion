@@ -23,7 +23,7 @@ import reactor.core.publisher.Mono;
  *
  */
 @Component
-public class ToDoValidator {
+public class TaskValidator {
 	
 	/**
 	 * Hibernate validator instance as default used by spring.
