@@ -3,6 +3,7 @@ package com.neeraj.todo;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -13,6 +14,7 @@ import com.neeraj.todo.model.ItemOnList;
 
 @RunWith(SpringRunner.class)
 @WebFluxTest
+@Ignore
 public class ToDoApplicationTest {
 
 	@Autowired
