@@ -10,7 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import com.neeraj.todo.model.ItemOnList;
+import com.neeraj.todo.model.Task;
 
 @RunWith(SpringRunner.class)
 @WebFluxTest
@@ -29,7 +29,7 @@ public class ToDoApplicationTest {
 		client.get().uri("/item/{id}", 2).accept(APPLICATION_JSON)
 			  .exchange()
 			  .expectStatus().isOk()
-			  .expectBody(ItemOnList.class);
+			  .expectBody(Task.class);
 	}
 	
 	@Test
@@ -37,7 +37,7 @@ public class ToDoApplicationTest {
 		client.get().uri("items").accept(APPLICATION_JSON)
 			  .exchange()
 			  .expectStatus().isOk()
-			  .expectBody(ItemOnList.class);
+			  .expectBody(Task.class);
 	}
 
 }
