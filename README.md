@@ -21,35 +21,28 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     ```
     [
     {
-        "id": "5b8581c6f88af61440027373",
-        "name": "item 1",
-        "complete": false
-    },
-    {
-        "id": "5b8581c6f88af61440027375",
-        "name": "item 3",
-        "complete": false
-    },
-    {
-        "id": "5b8581c6f88af61440027374",
-        "name": "item 2",
-        "complete": false
-    },
-    {
-        "id": "5b8581c6f88af61440027376",
-        "name": "item 4",
-        "complete": false
+        "id": "5de8e16e956e6d7f4cc00ea0",
+        "title": "title",
+        "desc": "desc",
+        "status": "NOT_COMPLETED",
+        "priority": "MEDIUM",
+        "category": "local",
+        "createdDate": "2019-12-05T10:52:30.779+0000"
     }
     ]
     ```
-- [GET(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5b8581c6f88af61440027373) to access the to-do task by its 'task_id'
+- [GET(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5de8e16e956e6d7f4cc00ea0) to access the to-do task by its 'task_id'
     
     Response:
     ```
     {
-    "id": "5b8581c6f88af61440027373",
-    "name": "item 1",
-    "complete": false
+        "id": "5de8e16e956e6d7f4cc00ea0",
+        "title": "title",
+        "desc": "desc",
+        "status": "NOT_COMPLETED",
+        "priority": "MEDIUM",
+        "category": "local",
+        "createdDate": "2019-12-05T10:52:30.779+0000"
     }
     ```
 - [POST(/v1/tasks)](http://localhost:8080/v1/tasks) to create a new task in database 
@@ -57,33 +50,47 @@ Note :- Please make sure you are passing 'Content-Type' header with the value 'a
     Request Body :
     ```
     {
-       "name":"New Task"
+   "title": "title",
+    "desc": "desc",
+    "status": "NOT_COMPLETED",
+    "priority": "MEDIUM",
+    "category": "local"
     }
     ```
     Response :
     ```
     {
-    "id": "5b85834bf88af61440027377",
-    "name": "New Task",
-    "complete": false
+    "id": "5de8e16e956e6d7f4cc00ea0",
+    "title": "title",
+    "desc": "desc",
+    "status": "NOT_COMPLETED",
+    "priority": "MEDIUM",
+    "category": "local",
+    "createdDate": "2019-12-05T10:52:30.779+0000"
     }
     ```
-- [PUT(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5b8581c6f88af61440027373) to update an existing to-do task
+- [PUT(/v1/tasks/{task_id})](http://localhost:8080/v1/tasks/5de8e16e956e6d7f4cc00ea0) to update an existing to-do task
     
     Request Body :
     ```
     {
-    "id": "5b85834bf88af61440027377",
-    "name": "New Task updated",
-    "complete": true
+   "title": "title1",
+    "desc": "desc",
+    "status": "COMPLETED",
+    "priority": "MEDIUM",
+    "category": "local"
     }
     ```
     Response :
     ```
     {
-    "id": "5b85834bf88af61440027377",
-    "name": "New Task updated",
-    "complete": true
+    "id": "5de8e562956e6d7f4cc00ea1",
+    "title": "title1",
+    "desc": "desc",
+    "status": "COMPLETED",
+    "priority": "MEDIUM",
+    "category": "local",
+    "createdDate": "2019-12-05T11:09:22.076+0000"
     }
     ```
     
