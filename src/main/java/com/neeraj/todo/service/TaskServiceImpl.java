@@ -3,7 +3,9 @@ package com.neeraj.todo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.neeraj.todo.exceptions.ToDoException;
 import com.neeraj.todo.model.Task;
+import com.neeraj.todo.model.ToDoError;
 import com.neeraj.todo.repository.ListRepository;
 
 import reactor.core.publisher.Flux;
@@ -75,11 +77,13 @@ public class TaskServiceImpl implements TaskService {
 	 */
 	public Mono<Void> deleteTaskById(String id) {
 		// find the task in the database
-		return listRepo.findById(id).flatMap(task -> {
-			// delete the data if found
-			return listRepo.delete(task);
-			// returns an error if not found
-		}).switchIfEmpty(Mono.error(new Exception("Task doesn't exist")));
+		return listRepo.findById(id)
+				// returns an error if not found
+				.switchIfEmpty(Mono.error(new ToDoException(new ToDoError(404, "Not Found", "Task doesn't exist"))))
+				.flatMap(task -> {
+					// delete the data if found
+					return listRepo.delete(task);
+				}).onErrorResume(e -> Mono.error((ToDoException) e));
 	}
 
 	/**
@@ -88,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
 	 * @return Mono<Void>
 	 */
 	public Mono<Void> deleteTasks() {
-		return listRepo.deleteAll();
+		return listRepo.deleteAll().onErrorResume(e -> Mono.error((ToDoException) e));
 	}
 
 }
