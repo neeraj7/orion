@@ -1,6 +1,5 @@
 package com.neeraj.todo.handlers;
 
-import static com.neeraj.todo.constant.ApplicationConstants.SUCCESSFULLY_DELETED;
 import static com.neeraj.todo.constant.ApplicationConstants.TASK_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
@@ -144,10 +143,11 @@ public class TaskHandler {
 	 */
 	public Mono<ServerResponse> deleteTasks(ServerRequest request) {
 		return taskService.deleteTasks()
-				.then(successResponse(SUCCESSFULLY_DELETED))
-				.onErrorResume(error -> {
-					return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
-							.syncBody("Can't delete. Error Happened");
+				.then(emptyResponse())
+				.onErrorResume(e -> {
+					ToDoException er = (ToDoException) e;
+					return ServerResponse.status(er.getExceptions().get(0).getErrorCode()).body(
+							Mono.just(er.getExceptions().get(0)), ToDoError.class);
 				});
 	}
 
@@ -159,19 +159,29 @@ public class TaskHandler {
 	 */
 	public Mono<ServerResponse> deleteTaskById(ServerRequest request) {
 		return taskService.deleteTaskById(request.pathVariable(TASK_ID))
-				.then(successResponse(SUCCESSFULLY_DELETED))
-				.onErrorResume(error -> {
-					return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
-							.syncBody("Can't delete. Error Happened");
+				.then(emptyResponse())
+				.onErrorResume(e -> {
+					ToDoException er = (ToDoException) e;
+					return ServerResponse.status(er.getExceptions().get(0).getErrorCode()).body(
+							Mono.just(er.getExceptions().get(0)), ToDoError.class);
 				});
 	}
 
+	/**
+	 * Prepares the empty response.
+	 * 
+	 * @return ServerResponse
+	 */
 	private Mono<ServerResponse> emptyResponse() {
-		return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-				.syncBody(new SuccessResponse(HttpStatus.OK.toString(),
-						"Empty response"));
+		return ServerResponse.noContent().build();
 	}
 
+	/**
+	 * Prepares the success response.
+	 * 
+	 * @param desc, description message
+	 * @return ServerResponse
+	 */
 	private Mono<ServerResponse> successResponse(String desc) {
 		return ServerResponse.ok().contentType(APPLICATION_JSON)
 				.body(BodyInserters.fromObject(
