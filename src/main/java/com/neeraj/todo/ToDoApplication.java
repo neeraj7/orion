@@ -14,12 +14,6 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 @EnableMongoAuditing
 public class ToDoApplication {
 
-	/**
-	 * Initializing dummy data in database.
-	 * 
-	 * @param listRepo
-	 * @return CommandLineRunner
-	 */
 	public static void main(String[] args) {
 		SpringApplication.run(ToDoApplication.class, args);
 	}
