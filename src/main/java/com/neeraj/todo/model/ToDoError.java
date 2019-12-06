@@ -8,6 +8,7 @@ package com.neeraj.todo.model;
  */
 public class ToDoError {
 
+	private int errorCode;
 	private String errorName;
 	private String errorMessage;
 
@@ -31,6 +32,21 @@ public class ToDoError {
 		super();
 		this.errorName = errorName;
 		this.errorMessage = errorMessage;
+	}
+	
+	public ToDoError(int code, String errorName, String errorMessage) {
+		super();
+		this.errorCode = code;
+		this.errorName = errorName;
+		this.errorMessage = errorMessage;
+	}
+	
+	public int getErrorCode() {
+		return errorCode;
+	}
+
+	public void setErrorCode(int errorCode) {
+		this.errorCode = errorCode;
 	}
 	
 	public ToDoError() {}
