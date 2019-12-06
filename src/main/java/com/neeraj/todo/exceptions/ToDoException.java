@@ -24,6 +24,10 @@ public class ToDoException extends Exception {
 		this.errors = errors;
 	}
 	
+	public ToDoException(ToDoError error) {
+		this.errors.add(error);
+	}
+	
 	public List<ToDoError> getExceptions() {
 		return errors;
 	}
