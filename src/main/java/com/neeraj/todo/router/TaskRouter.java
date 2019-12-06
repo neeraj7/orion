@@ -30,7 +30,6 @@ import com.neeraj.todo.handlers.TaskHandler;
 @Configuration
 public class TaskRouter {
 
-	
 	@Bean
 	public RouterFunction<ServerResponse> defaultRoutes(TaskHandler taskHandler) {
 		// Adding the prefix to the endpoints
