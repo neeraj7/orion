@@ -55,12 +55,11 @@ public class TaskHandler {
 				.flatMap(task -> ServerResponse.ok()
 						.contentType(APPLICATION_JSON)
 						.body(BodyInserters.fromObject(task)))
-				.switchIfEmpty(emptyResponse()).onErrorResume(err -> {
-					ToDoError error = new ToDoError("Not Found",
-							"No task is found.");
-					return ServerResponse.status(HttpStatus.NOT_FOUND)
-							.contentType(APPLICATION_JSON)
-							.body(BodyInserters.fromObject(error));
+				.switchIfEmpty(notFoundResponse()).onErrorResume(e -> {
+					ToDoException er = (ToDoException) e;
+					return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+							Mono.just(er.getExceptions().get(0)),
+							ToDoError.class);
 				});
 	}
 
@@ -75,9 +74,9 @@ public class TaskHandler {
 				.flatMap(task -> ServerResponse.ok()
 						.contentType(APPLICATION_JSON)
 						.body(BodyInserters.fromObject(task)))
-				.switchIfEmpty(emptyResponse()).onErrorResume(e -> {
+				.onErrorResume(e -> {
 					ToDoException er = (ToDoException) e;
-					return ServerResponse.badRequest().body(
+					return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
 							Mono.just(er.getExceptions().get(0)),
 							ToDoError.class);
 				});
@@ -186,5 +185,15 @@ public class TaskHandler {
 		return ServerResponse.ok().contentType(APPLICATION_JSON)
 				.body(BodyInserters.fromObject(
 						new SuccessResponse(HttpStatus.OK.toString(), desc)));
+	}
+	
+	/**
+	 * Prepares the not found response.
+	 */
+	private Mono<ServerResponse> notFoundResponse() {
+		ToDoError error = new ToDoError(HttpStatus.NOT_FOUND.value(), "Not Found",
+				"No task is found.");
+		return ServerResponse.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_JSON)
+				.body(BodyInserters.fromObject(error));
 	}
 }
