@@ -48,6 +48,10 @@ public class TaskValidator {
 						  else {
 							  return Mono.error(new ToDoException(errors));
 						  }
+					  })
+					  .onErrorResume(error -> {
+						  ToDoException tde = (ToDoException) error;
+						  return Mono.error(tde);
 					  });
 	}
 	

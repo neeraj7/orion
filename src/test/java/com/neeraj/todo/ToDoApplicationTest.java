@@ -14,9 +14,14 @@ import org.springframework.boot.test.autoconfigure.data.mongo.AutoConfigureDataM
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 
 import com.neeraj.todo.constant.TaskPriority;
 import com.neeraj.todo.constant.TaskStatus;
@@ -48,7 +53,7 @@ public class ToDoApplicationTest {
 	 * WebTestClient instance.
 	 */
 	@Autowired
-	private WebTestClient testClient;
+	private WebTestClient webTestClient;
 	
 	/**
 	 * ListRepository mock.
@@ -75,7 +80,7 @@ public class ToDoApplicationTest {
 	 */
 	@Test
 	public void testGetById() {
-		testClient.get().uri("/v1/tasks/taskId").accept(APPLICATION_JSON)
+		webTestClient.get().uri("/v1/tasks/taskId").accept(APPLICATION_JSON)
 			  .exchange()
 			  .expectStatus().isOk().expectBody(Task.class);
 	}
@@ -85,7 +90,7 @@ public class ToDoApplicationTest {
 	 */
 	@Test
 	public void testGetByIdTaskNotFound() {
-		testClient.get().uri("/v1/tasks/no_id").accept(APPLICATION_JSON)
+		webTestClient.get().uri("/v1/tasks/no_id").accept(APPLICATION_JSON)
 			  .exchange()
 			  .expectStatus().isNotFound().expectBody(ToDoError.class);
 	}
@@ -95,7 +100,7 @@ public class ToDoApplicationTest {
 	 */
 	@Test
 	public void testGetByIdWithException() {
-		testClient.get().uri("/v1/tasks/errorId").accept(APPLICATION_JSON)
+		webTestClient.get().uri("/v1/tasks/errorId").accept(APPLICATION_JSON)
 			  .exchange()
 			  .expectStatus().is5xxServerError();
 	}
@@ -105,7 +110,7 @@ public class ToDoApplicationTest {
 	 */
 	@Test
 	public void testGetAll() {
-		testClient.get().uri("/v1/tasks")
+		webTestClient.get().uri("/v1/tasks")
 			  .exchange()
 			  .expectStatus().isOk().expectBodyList(Task.class);
 	}
@@ -118,9 +123,55 @@ public class ToDoApplicationTest {
 		ToDoError error = new ToDoError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "Something unexpected happened");
 		ToDoException exception = new ToDoException(error);
 		Mockito.when(repo.findAll()).thenReturn(Flux.error(exception));
-		testClient.get().uri("/v1/tasks")
+		webTestClient.get().uri("/v1/tasks")
 			  .exchange()
 			  .expectStatus().is5xxServerError();
+	}
+	
+	/**
+	 * Test POST /v1/tasks.
+	 */
+	@Test
+	public void testCreateTask() {
+		Task task = new Task();
+		Mockito.when(repo.save(Mockito.any())).thenReturn(Mono.just(task));
+		webTestClient.post().uri("/v1/tasks")
+			.contentType(APPLICATION_JSON)
+			.accept(APPLICATION_JSON)
+			.body(BodyInserters.fromObject(task))
+			.exchange()
+			.expectStatus().is2xxSuccessful();			  
+	}
+	
+	/**
+	 * Test POST /v1/tasks when any exception occurs.
+	 */
+	@Test
+	public void testCreateTaskWithException() {
+		Task task = new Task();
+		ToDoError error = new ToDoError(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error", "Something unexpected happened");
+		ToDoException exception = new ToDoException(error);
+		Mockito.when(repo.save(Mockito.any())).thenReturn(Mono.error(exception));
+		webTestClient.post().uri("/v1/tasks")
+			.contentType(APPLICATION_JSON)
+			.accept(APPLICATION_JSON)
+			.body(BodyInserters.fromObject(task))
+			.exchange()
+			.expectStatus().is5xxServerError();			  
+	}
+	
+	/**
+	 * Test PUT  /v1/tasks/{task_id}.
+	 */
+	@Test
+	public void testUpdateTask() {
+		Task task = new Task();
+		Mockito.when(repo.save(Mockito.any())).thenReturn(Mono.just(task));
+		webTestClient.put().uri("/v1/tasks/taskId")
+		.contentType(APPLICATION_JSON)
+		.accept(APPLICATION_JSON)
+		.body(BodyInserters.fromObject(task))
+		.exchange().expectStatus().is2xxSuccessful();
 	}
 
 }

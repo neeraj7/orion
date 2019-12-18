@@ -4,6 +4,8 @@ import static com.neeraj.todo.constant.ApplicationConstants.TASK_ID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -51,16 +53,14 @@ public class TaskHandler {
 	 *         found in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> getTaskById(ServerRequest request) {
+		// Find the task by id in the db
 		return taskService.getTaskById(request.pathVariable(TASK_ID))
-				.flatMap(task -> ServerResponse.ok()
-						.contentType(APPLICATION_JSON)
-						.body(BodyInserters.fromObject(task)))
-				.switchIfEmpty(notFoundResponse()).onErrorResume(e -> {
-					ToDoException er = (ToDoException) e;
-					return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-							Mono.just(er.getExceptions().get(0)),
-							ToDoError.class);
-				});
+				// If found, then prepare the success response
+				.flatMap(task -> prepareSuccessResponse(task, HttpStatus.OK))
+				// If not found, then prepare the empty response
+				.switchIfEmpty(notFoundResponse())
+				// If any error occurs, then prepare the error response
+				.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -70,16 +70,10 @@ public class TaskHandler {
 	 * @return Flux<ItemOnList> in the Mono<ServerResponse>.
 	 */
 	public Mono<ServerResponse> getTasks(ServerRequest request) {
-		return taskService.getTasks().collectList()
-				.flatMap(task -> ServerResponse.ok()
-						.contentType(APPLICATION_JSON)
-						.body(BodyInserters.fromObject(task)))
-				.onErrorResume(e -> {
-					ToDoException er = (ToDoException) e;
-					return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-							Mono.just(er.getExceptions().get(0)),
-							ToDoError.class);
-				});
+		return taskService.getTasks()
+				.collectList()
+				.flatMap(response -> prepareSuccessResponse(response, HttpStatus.OK))
+				.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -91,18 +85,12 @@ public class TaskHandler {
 	public Mono<ServerResponse> createTask(ServerRequest request) {
 		// Validate the request body
 		return taskValidator.validateBody(Task.class, request)
-				.flatMap(body -> ServerResponse.ok()
-						.contentType(MediaType.APPLICATION_JSON)
-						// save the task into the db
-						// and return as the saved task in response
-						.body(fromPublisher(taskService.createTask(body),
-								Task.class))
-						.onErrorResume(e -> {
-							ToDoException er = (ToDoException) e;
-							return ServerResponse.badRequest().body(
-									Mono.just(er.getExceptions().get(0)),
-									ToDoError.class);
-						}));
+					// Call to createTask service method
+					.flatMap(task -> taskService.createTask(task))
+					// If successfully created then prepare the success response
+					.flatMap(response -> prepareSuccessResponse(response, HttpStatus.CREATED))
+					// If unsuccessful, then prepare the error response
+					.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -113,25 +101,13 @@ public class TaskHandler {
 	 */
 	public Mono<ServerResponse> updateTask(ServerRequest request) {
 		// Validate the request body
-		return taskValidator.validateBody(Task.class, request).flatMap(task -> {
-			// Call to updateTask method
-			return taskService.updateTask(request.pathVariable(TASK_ID), task)
-					// on success
-					.flatMap(t -> ServerResponse.status(HttpStatus.CREATED)
-							.contentType(APPLICATION_JSON)
-							.body(BodyInserters.fromObject(t)))
-					// on failure
-					.onErrorResume(error -> {
-						return ServerResponse.status(HttpStatus.BAD_REQUEST)
-								.contentType(APPLICATION_JSON).syncBody(
-										"Error happened during updating the task.");
-					});
-			// When validation fails
-		}).onErrorResume(e -> {
-			ToDoException er = (ToDoException) e;
-			return ServerResponse.badRequest().body(
-					Mono.just(er.getExceptions().get(0)), ToDoError.class);
-		});
+		return taskValidator.validateBody(Task.class, request)
+					// Call to updateTask service method
+					.flatMap(task -> taskService.updateTask(request.pathVariable(TASK_ID), task))
+					// If successfully created then prepare the success response
+					.flatMap(response -> prepareSuccessResponse(response, HttpStatus.OK))
+					// If unsuccessful, then prepare the error response
+					.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -143,11 +119,7 @@ public class TaskHandler {
 	public Mono<ServerResponse> deleteTasks(ServerRequest request) {
 		return taskService.deleteTasks()
 				.then(emptyResponse())
-				.onErrorResume(e -> {
-					ToDoException er = (ToDoException) e;
-					return ServerResponse.status(er.getExceptions().get(0).getErrorCode()).body(
-							Mono.just(er.getExceptions().get(0)), ToDoError.class);
-				});
+				.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -159,11 +131,7 @@ public class TaskHandler {
 	public Mono<ServerResponse> deleteTaskById(ServerRequest request) {
 		return taskService.deleteTaskById(request.pathVariable(TASK_ID))
 				.then(emptyResponse())
-				.onErrorResume(e -> {
-					ToDoException er = (ToDoException) e;
-					return ServerResponse.status(er.getExceptions().get(0).getErrorCode()).body(
-							Mono.just(er.getExceptions().get(0)), ToDoError.class);
-				});
+				.onErrorResume(e -> prepareErrorResponse(e));
 	}
 
 	/**
@@ -178,13 +146,25 @@ public class TaskHandler {
 	/**
 	 * Prepares the success response.
 	 * 
-	 * @param desc, description message
+	 * @param Task, task
+	 * 		  HttpStatus, response status
 	 * @return ServerResponse
 	 */
-	private Mono<ServerResponse> successResponse(String desc) {
-		return ServerResponse.ok().contentType(APPLICATION_JSON)
-				.body(BodyInserters.fromObject(
-						new SuccessResponse(HttpStatus.OK.toString(), desc)));
+	private Mono<ServerResponse> prepareSuccessResponse(Task task, HttpStatus status) {
+		return ServerResponse.status(status).contentType(APPLICATION_JSON)
+				.body(BodyInserters.fromObject(task));
+	}
+	
+	/**
+	 * Prepares the success response.
+	 * 
+	 * @param List<Task>, list of tasks
+	 * 		  HttpStatus, response status
+	 * @return ServerResponse
+	 */
+	private Mono<ServerResponse> prepareSuccessResponse(List<Task> task, HttpStatus status) {
+		return ServerResponse.status(status).contentType(APPLICATION_JSON)
+				.body(BodyInserters.fromObject(task));
 	}
 	
 	/**
@@ -195,5 +175,14 @@ public class TaskHandler {
 				"No task is found.");
 		return ServerResponse.status(HttpStatus.NOT_FOUND).contentType(APPLICATION_JSON)
 				.body(BodyInserters.fromObject(error));
+	}
+	
+	/**
+	 * Prepares the error response.
+	 */
+	private Mono<ServerResponse> prepareErrorResponse(Throwable e) {
+		ToDoException er = (ToDoException) e;
+		return ServerResponse.status(er.getExceptions().get(0).getErrorCode()).body(
+				Mono.just(er.getExceptions().get(0)), ToDoError.class);
 	}
 }
